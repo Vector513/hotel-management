@@ -30,7 +30,7 @@ class RoomDao {
             it[pricePerDay] = room.pricePerDay
             it[phoneNumber] = room.phoneNumber
         } get RoomsTable.roomId
-    } ?: -1
+    }
 
     fun update(id: Int, updated: Room): Boolean = transaction {
         RoomsTable.update({ RoomsTable.roomId eq id }) {

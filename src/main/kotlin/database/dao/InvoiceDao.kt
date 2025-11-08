@@ -34,7 +34,7 @@ class InvoiceDao {
             it[totalAmount] = invoice.totalAmount
             it[issueDate] = invoice.issueDate
         } get InvoicesTable.invoiceId
-    } ?: -1
+    }
 
     fun update(id: Int, updated: Invoice): Boolean = transaction {
         InvoicesTable.update({ InvoicesTable.invoiceId eq id }) {
