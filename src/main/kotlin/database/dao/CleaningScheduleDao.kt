@@ -1,8 +1,8 @@
-package database.dao
+package com.example.database.dao
 
-import database.tables.CleaningScheduleTable
-import models.CleaningSchedule
-import models.DayOfWeek
+import com.example.database.tables.CleaningScheduleTable
+import com.example.models.CleaningSchedule
+import com.example.models.DayOfWeek
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.transaction

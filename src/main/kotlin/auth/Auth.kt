@@ -1,12 +1,10 @@
-package auth
+// JwtConfig.kt
+package com.example.auth
 
+import com.example.models.User
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import java.util.*
-
-enum class UserRole { ADMIN, WORKER, CLIENT }
-
-data class User(val username: String, val password: String, val role: UserRole)
 
 object JwtConfig {
     private const val secret = "supersecretkey"
@@ -21,7 +19,7 @@ object JwtConfig {
             .withAudience(audience)
             .withIssuer(issuer)
             .withClaim("username", user.username)
-            .withClaim("role", user.role.name)
+            .withClaim("role", user.role.name) // enum -> String для токена
             .withExpiresAt(Date(System.currentTimeMillis() + 30 * 60 * 1000)) // 30 минут
             .sign(algorithm)
     }

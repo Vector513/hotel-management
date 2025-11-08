@@ -1,7 +1,7 @@
 package com.example
 
-import auth.JwtConfig
-import routes.authRoutes
+import com.example.auth.JwtConfig
+import com.example.routes.authRoutes
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*

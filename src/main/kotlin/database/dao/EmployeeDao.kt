@@ -1,7 +1,7 @@
-package database.dao
+package com.example.database.dao
 
-import database.tables.EmployeesTable
-import models.Employee
+import com.example.database.tables.EmployeesTable
+import com.example.models.Employee
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.transaction

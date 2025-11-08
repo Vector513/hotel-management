@@ -1,4 +1,4 @@
-package models
+package com.example.models
 
 import java.io.Serializable
 import java.math.BigDecimal
@@ -53,9 +53,11 @@ data class Invoice(
     val issueDate: LocalDate
 ) : Serializable
 
+enum class UserRole { ADMIN, WORKER, CLIENT }
+
 data class User(
     val id: Int,
     val username: String,
     val passwordHash: String,
-    val role: String
-) : Serializable
+    val role: UserRole
+)

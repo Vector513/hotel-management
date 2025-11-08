@@ -1,55 +1,61 @@
-package database.dao
+package com.example.database.dao
 
-import database.tables.UsersTable
-import models.User
+import com.example.database.tables.UsersTable
+import com.example.models.User
+import com.example.models.UserRole
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.mindrot.jbcrypt.BCrypt
-import java.security.MessageDigest
 
 class UserDao {
 
+    // Получить всех пользователей
     fun getAll(): List<User> = transaction {
         UsersTable.selectAll().map { it.toUser() }
     }
 
+    // Найти пользователя по ID
     fun findById(id: Int): User? = transaction {
-        UsersTable
-            .selectAll()
-            .where { UsersTable.id eq id }
+        UsersTable.selectAll()
             .map { it.toUser() }
-            .singleOrNull()
+            .singleOrNull { it.id == id }
     }
 
+    // Найти пользователя по username
     fun findByUsername(username: String): User? = transaction {
-        UsersTable
-            .selectAll()
-            .where { UsersTable.username eq username }
+        UsersTable.selectAll()
             .map { it.toUser() }
-            .singleOrNull()
+            .singleOrNull { it.username == username }
     }
 
-    fun create(username: String, password: String, role: String): Int = transaction {
-        UsersTable.insert {
+    // Создать нового пользователя
+    fun create(username: String, password: String, role: UserRole): User? = transaction {
+        val hash = hashPassword(password)
+        val insertedId = UsersTable.insert {
             it[UsersTable.username] = username
-            it[UsersTable.passwordHash] = hashPassword(password)
-            it[UsersTable.role] = role
+            it[UsersTable.passwordHash] = hash
+            it[UsersTable.role] = role.name
         } get UsersTable.id
+
+        findById(insertedId)
     }
 
+    // Обновить существующего пользователя
     fun update(id: Int, updated: User): Boolean = transaction {
         UsersTable.update({ UsersTable.id eq id }) {
             it[username] = updated.username
             it[passwordHash] = updated.passwordHash
-            it[role] = updated.role
+            it[role] = updated.role.name
         } > 0
     }
 
+    // Удалить пользователя
     fun delete(id: Int): Boolean = transaction {
         UsersTable.deleteWhere { UsersTable.id eq id } > 0
     }
 
+    // Проверка пароля через BCrypt
     fun verifyPassword(user: User, password: String): Boolean {
         return BCrypt.checkpw(password, user.passwordHash)
     }
@@ -59,11 +65,11 @@ class UserDao {
         id = this[UsersTable.id],
         username = this[UsersTable.username],
         passwordHash = this[UsersTable.passwordHash],
-        role = this[UsersTable.role]
+        role = UserRole.valueOf(this[UsersTable.role])
     )
 
+    // Хешируем пароль через BCrypt
     private fun hashPassword(password: String): String {
-        val bytes = MessageDigest.getInstance("SHA-256").digest(password.toByteArray())
-        return bytes.joinToString("") { "%02x".format(it) }
+        return BCrypt.hashpw(password, BCrypt.gensalt())
     }
 }

@@ -1,8 +1,8 @@
-package database.dao
+package com.example.database.dao
 
-import database.tables.RoomsTable
-import models.Room
-import models.RoomType
+import com.example.database.tables.RoomsTable
+import com.example.models.Room
+import com.example.models.RoomType
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.transaction

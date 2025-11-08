@@ -1,5 +1,6 @@
 package com.example
 
+import com.example.routes.*
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import io.ktor.http.*
@@ -23,7 +24,7 @@ import java.time.Duration
 import kotlin.time.Duration.Companion.seconds
 import org.jetbrains.exposed.sql.*
 import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver
-import routes.*
+import com.example.routes.*
 
 fun Application.configureRouting() {
     routing {

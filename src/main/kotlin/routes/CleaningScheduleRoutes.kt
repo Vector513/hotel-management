@@ -1,12 +1,12 @@
-package routes
+package com.example.routes
 
-import database.dao.CleaningScheduleDao
+import com.example.database.dao.CleaningScheduleDao
+import com.example.models.CleaningSchedule
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.http.*
-import models.CleaningSchedule
 
 fun Route.cleaningRoutes() {
     val dao = CleaningScheduleDao()
