@@ -11,6 +11,7 @@ object ClientsTable : Table("clients") {
     val checkInDate = date("check_in_date")
     val daysReserved = integer("days_reserved")
     val roomId = integer("room_id").references(RoomsTable.roomId)
+    val isResident = bool("is_resident").default(true)
 
     override val primaryKey = PrimaryKey(clientId)
 }

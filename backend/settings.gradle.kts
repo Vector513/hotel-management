@@ -1,4 +1,4 @@
-rootProject.name = "hotel-management"
+rootProject.name = "backend"
 
 dependencyResolutionManagement {
     repositories {

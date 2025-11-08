@@ -33,11 +33,8 @@ fun Application.configureRouting() {
         }
 
         authRoutes()
-        clientsRoutes()
-        roomsRoutes()
-        employeesRoutes()
-        cleaningRoutes()
-        invoicesRoutes()
+        clientRoutes()
+        employeeRoutes()
         adminRoutes()
     }
 }

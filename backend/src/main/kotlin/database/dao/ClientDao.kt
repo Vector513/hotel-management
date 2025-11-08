@@ -73,6 +73,13 @@ class ClientDao {
             .filter { it.checkInDate.plusDays(it.daysReserved.toLong()) == date }
     }
 
+    fun setResidentsByRoom(roomId: Int, isResident: Boolean) = transaction {
+        ClientsTable.update({ ClientsTable.roomId eq roomId }) {
+            it[ClientsTable.isResident] = isResident
+        }
+    }
+
+
     private fun ResultRow.toClient() = Client(
         clientId = this[ClientsTable.clientId],
         passportNumber = this[ClientsTable.passportNumber],
@@ -80,6 +87,8 @@ class ClientDao {
         city = this[ClientsTable.city],
         checkInDate = this[ClientsTable.checkInDate],
         daysReserved = this[ClientsTable.daysReserved],
-        roomId = this[ClientsTable.roomId]
+        roomId = this[ClientsTable.roomId],
+        isResident = this[ClientsTable.isResident]
     )
+
 }

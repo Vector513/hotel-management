@@ -30,12 +30,13 @@ class UserDao {
     }
 
     // Создать нового пользователя
-    fun create(username: String, password: String, role: UserRole): User? = transaction {
+    fun create(username: String, password: String, role: UserRole, clientId: Int? = null): User? = transaction {
         val hash = hashPassword(password)
         val insertedId = UsersTable.insert {
             it[UsersTable.username] = username
             it[UsersTable.passwordHash] = hash
             it[UsersTable.role] = role.name
+            it[UsersTable.clientId] = clientId
         } get UsersTable.id
 
         findById(insertedId)
@@ -47,6 +48,7 @@ class UserDao {
             it[username] = updated.username
             it[passwordHash] = updated.passwordHash
             it[role] = updated.role.name
+            it[clientId] = updated.clientId
         } > 0
     }
 
@@ -60,12 +62,25 @@ class UserDao {
         return BCrypt.checkpw(password, user.passwordHash)
     }
 
+    // Создать пользователя для клиента
+    fun createForClient(clientId: Int, username: String, password: String): User? {
+        return create(username, password, UserRole.CLIENT, clientId)
+    }
+
+    // Удалить пользователя по clientId
+    fun deleteByClientId(clientId: Int) {
+        transaction {
+            UsersTable.deleteWhere { UsersTable.clientId eq clientId }
+        }
+    }
+
     // --- приватный mapper ---
     private fun ResultRow.toUser() = User(
         id = this[UsersTable.id],
         username = this[UsersTable.username],
         passwordHash = this[UsersTable.passwordHash],
-        role = UserRole.valueOf(this[UsersTable.role])
+        role = UserRole.valueOf(this[UsersTable.role]),
+        clientId = this[UsersTable.clientId]
     )
 
     // Хешируем пароль через BCrypt
@@ -73,3 +88,4 @@ class UserDao {
         return BCrypt.hashpw(password, BCrypt.gensalt())
     }
 }
+

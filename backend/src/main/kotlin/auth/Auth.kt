@@ -1,4 +1,3 @@
-// JwtConfig.kt
 package com.example.auth
 
 import com.example.models.User
@@ -14,15 +13,21 @@ object JwtConfig {
 
     private val algorithm = Algorithm.HMAC256(secret)
 
-    fun generateToken(user: User): String {
-        return JWT.create()
+    fun generateToken(user: User, clientId: Int? = null, employeeId: Int? = null): String {
+        val builder = JWT.create()
             .withAudience(audience)
             .withIssuer(issuer)
+            .withClaim("userId", user.id)
             .withClaim("username", user.username)
-            .withClaim("role", user.role.name) // enum -> String для токена
+            .withClaim("role", user.role.name)
             .withExpiresAt(Date(System.currentTimeMillis() + 30 * 60 * 1000)) // 30 минут
-            .sign(algorithm)
+
+        clientId?.let { builder.withClaim("clientId", it) }
+        employeeId?.let { builder.withClaim("employeeId", it) }
+
+        return builder.sign(algorithm)
     }
+
 
     fun getVerifier() = JWT
         .require(algorithm)
