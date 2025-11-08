@@ -10,6 +10,7 @@ import io.ktor.server.auth.jwt.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import java.math.BigDecimal
 
 fun Route.adminRoutes() {
     val clientDao = ClientDao()
@@ -43,6 +44,61 @@ fun Route.adminRoutes() {
                 val client = clientDao.findById(clientId)
                 if (client != null) call.respond(HttpStatusCode.OK, client)
                 else call.respond(HttpStatusCode.NotFound, "Client not found")
+            }
+
+            get("/clients/from") {
+                val principal = call.principal<JWTPrincipal>()
+                if (!call.requireRole(UserRole.ADMIN, principal)) return@get
+
+                val city = call.request.queryParameters["city"] ?: run {
+                    call.respond(HttpStatusCode.BadRequest, "Missing city name")
+                    return@get
+                }
+
+                val clients = clientDao.getAll().filter {
+                    it.city.equals(city, ignoreCase = true)
+                }
+
+                call.respond(HttpStatusCode.OK, clients)
+            }
+
+            get("/clients/{id}/cleaner") {
+                val principal = call.principal<JWTPrincipal>()
+                if (!call.requireRole(UserRole.ADMIN, principal)) return@get
+
+                val clientId = call.parameters["id"]?.toIntOrNull() ?: run {
+                    call.respond(HttpStatusCode.BadRequest, "Missing client ID")
+                    return@get
+                }
+
+                val dayOfWeek = call.request.queryParameters["dayOfWeek"] ?: run {
+                    call.respond(HttpStatusCode.BadRequest, "Missing day of week")
+                    return@get
+                }
+
+                val client = clientDao.findById(clientId)
+                if (client == null || client.roomId == null) {
+                    call.respond(HttpStatusCode.NotFound, "Client not found or not assigned to a room")
+                    return@get
+                }
+
+                val schedule = scheduleDao.getAll().find { schedule ->
+                    schedule.dayOfWeek.name.equals(dayOfWeek, ignoreCase = true) &&
+                            schedule.floor == roomDao.findById(client.roomId)!!.floor
+                }
+
+                if (schedule == null) {
+                    call.respond(HttpStatusCode.NotFound, "No cleaning schedule found for that day")
+                    return@get
+                }
+
+                val employee = employeeDao.findById(schedule.employeeId)
+                if (employee == null) {
+                    call.respond(HttpStatusCode.NotFound, "Employee not found")
+                    return@get
+                }
+
+                call.respond(HttpStatusCode.OK, mapOf("employeeName" to employee.fullName))
             }
 
             post("/clients") {
@@ -139,6 +195,24 @@ fun Route.adminRoutes() {
                 else call.respond(HttpStatusCode.NotFound, "Room not found")
             }
 
+            get("/rooms/free") {
+                val principal = call.principal<JWTPrincipal>()
+                if (!call.requireRole(UserRole.ADMIN, principal)) return@get
+
+                val allRooms = roomDao.getAll()
+                val occupiedRoomIds = clientDao.getAll().filter { it.isResident }.mapNotNull { it.roomId }.toSet()
+                val freeRooms = allRooms.filter { it.roomId !in occupiedRoomIds }
+
+                call.respond(
+                    HttpStatusCode.OK,
+                    FreeRoomsResponse(
+                        totalRooms = allRooms.size,
+                        freeRoomsCount = freeRooms.size,
+                        freeRooms = freeRooms
+                    )
+                )
+            }
+
             post("/rooms") {
                 val principal = call.principal<JWTPrincipal>()
                 if (!call.requireRole(UserRole.ADMIN, principal)) return@post
@@ -195,6 +269,19 @@ fun Route.adminRoutes() {
                 clientDao.setResidentsByRoom(roomId, false)
 
                 call.respond(HttpStatusCode.OK, "Room deleted and residents updated")
+            }
+
+            get("/rooms/{Id}/residents") {
+                val principal = call.principal<JWTPrincipal>()
+                if (!call.requireRole(UserRole.ADMIN, principal)) return@get
+
+                val roomId = call.parameters["Id"]?.toIntOrNull() ?: run {
+                    call.respond(HttpStatusCode.BadRequest, "Missing or invalid room ID")
+                    return@get
+                }
+
+                val residents = clientDao.getAll().filter { it.roomId == roomId && it.isResident }
+                call.respond(HttpStatusCode.OK, residents)
             }
 
             /** ---------------- Invoices ---------------- */
@@ -271,6 +358,77 @@ fun Route.adminRoutes() {
 
                 call.respond(HttpStatusCode.OK, "Invoice deleted")
             }
+
+            post("/clients/{id}/invoice") {
+                val principal = call.principal<JWTPrincipal>()
+                if (!call.requireRole(UserRole.ADMIN, principal)) return@post
+
+                // Получаем clientId и логируем
+                val clientId = call.parameters["id"]?.toIntOrNull()
+                if (clientId == null) {
+                    println("Missing or invalid client ID")
+                    call.respond(HttpStatusCode.BadRequest, "Missing or invalid client ID")
+                    return@post
+                }
+                println("Received clientId: $clientId")
+
+                // Получаем клиента из БД
+                val client = clientDao.findById(clientId)
+                if (client == null) {
+                    println("Client not found for id: $clientId")
+                    call.respond(HttpStatusCode.NotFound, "Client not found")
+                    return@post
+                }
+                println("Found client: $client")
+
+                // Проверяем наличие комнаты
+                val roomId = client.roomId
+                if (roomId == null) {
+                    println("Client does not have a room assigned")
+                    call.respond(HttpStatusCode.BadRequest, "Client does not have a valid room")
+                    return@post
+                }
+
+                // Получаем комнату
+                val room = roomDao.findById(roomId)
+                if (room == null) {
+                    println("Room not found for roomId: $roomId")
+                    call.respond(HttpStatusCode.BadRequest, "Client does not have a valid room")
+                    return@post
+                }
+                println("Found room: $room")
+
+                // Вычисляем стоимость проживания
+                val total = try {
+                    room.pricePerDay.multiply(BigDecimal(client.daysReserved))
+                } catch (e: Exception) {
+                    println("Error calculating total: ${e.message}")
+                    call.respond(HttpStatusCode.InternalServerError, "Error calculating total")
+                    return@post
+                }
+                println("Calculated total: $total")
+
+                // Создаем счет
+                val invoice = Invoice(
+                    invoiceId = 0,
+                    clientId = client.clientId,
+                    totalAmount = total,
+                    issueDate = java.time.LocalDate.now()
+                )
+
+                val id = try {
+                    invoiceDao.add(invoice)
+                } catch (e: Exception) {
+                    println("Error saving invoice: ${e.message}")
+                    call.respond(HttpStatusCode.InternalServerError, "Error creating invoice")
+                    return@post
+                }
+
+                println("Invoice created with id: $id")
+                call.respond(HttpStatusCode.Created, mapOf("invoiceId" to id, "amount" to total))
+            }
+
+
 
             /** ---------------- Employees ---------------- */
             get("/employees") {

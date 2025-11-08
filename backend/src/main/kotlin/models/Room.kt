@@ -45,3 +45,11 @@ data class UpdateRoomRequest(
         phoneNumber = phoneNumber
     )
 }
+
+@Serializable
+data class FreeRoomsResponse(
+    val totalRooms: Int,
+    val freeRoomsCount: Int,
+    val freeRooms: List<Room>
+)
+
