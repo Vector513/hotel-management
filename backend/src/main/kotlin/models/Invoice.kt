@@ -24,6 +24,12 @@ data class CreateInvoiceRequest(
 )
 
 @Serializable
+data class InvoiceResponse(
+    val invoiceId: Int,
+    val amount: String
+)
+
+@Serializable
 data class UpdateInvoiceRequest(
     val clientId: Int,
     @Serializable(with = BigDecimalSerializer::class)

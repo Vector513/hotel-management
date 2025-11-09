@@ -425,7 +425,7 @@ fun Route.adminRoutes() {
                 }
 
                 println("Invoice created with id: $id")
-                call.respond(HttpStatusCode.Created, mapOf("invoiceId" to id, "amount" to total))
+                call.respond(HttpStatusCode.Created, InvoiceResponse(id, total.toPlainString()))
             }
 
 
