@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Container,
   Paper,
   Typography,
   Table,
@@ -75,38 +74,32 @@ const QuarterlyReportComponent: React.FC = () => {
     });
   };
 
-  const calculateOccupancyRate = (occupied: number, total: number) => {
-    if (total === 0) return 0;
+  const calculateOccupancyRate = (occupied: number, total: number): string => {
+    if (total === 0) return '0';
     return ((occupied / total) * 100).toFixed(1);
   };
 
   if (loading) {
     return (
-      <Container maxWidth="lg">
-        <Box display="flex" justifyContent="center" alignItems="center" minHeight="50vh">
-          <CircularProgress />
-        </Box>
-      </Container>
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="50vh">
+        <CircularProgress />
+      </Box>
     );
   }
 
   if (error) {
     return (
-      <Container maxWidth="lg">
-        <Alert severity="error" sx={{ mt: 3 }}>
-          {error}
-        </Alert>
-      </Container>
+      <Alert severity="error" sx={{ mt: 3 }}>
+        {error}
+      </Alert>
     );
   }
 
   if (!report) {
     return (
-      <Container maxWidth="lg">
-        <Alert severity="info" sx={{ mt: 3 }}>
-          Нет данных для отчета
-        </Alert>
-      </Container>
+      <Alert severity="info" sx={{ mt: 3 }}>
+        Нет данных для отчета
+      </Alert>
     );
   }
 

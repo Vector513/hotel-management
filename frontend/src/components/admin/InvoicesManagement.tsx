@@ -23,7 +23,6 @@ import {
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
-import ReceiptIcon from '@mui/icons-material/Receipt';
 import { invoicesAPI, clientsAPI } from '../../services/api';
 import type { Invoice, CreateInvoiceRequest, UpdateInvoiceRequest, Client } from '../../types';
 

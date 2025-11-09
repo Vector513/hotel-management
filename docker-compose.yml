@@ -1,0 +1,68 @@
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: hotel-db
+    environment:
+      POSTGRES_DB: hotel_db
+      POSTGRES_USER: hotel_admin
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-orf.12014319N}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hotel_admin -d hotel_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - hotel-network
+
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: hotel-backend
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/hotel_db
+      DB_USER: hotel_admin
+      DB_PASSWORD: ${DB_PASSWORD:-orf.12014319N}
+      DB_DRIVER: org.postgresql.Driver
+      JWT_SECRET: ${JWT_SECRET:-supersecretkey}
+    ports:
+      - "${BACKEND_PORT:-8080}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./backend/logs:/app/logs
+    networks:
+      - hotel-network
+    restart: unless-stopped
+
+  # Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=${VITE_API_URL:-http://localhost:8080}
+    container_name: hotel-frontend
+    ports:
+      - "${FRONTEND_PORT:-3000}:80"
+    depends_on:
+      - backend
+    networks:
+      - hotel-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  hotel-network:
+    driver: bridge
+

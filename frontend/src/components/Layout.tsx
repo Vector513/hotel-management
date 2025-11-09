@@ -4,7 +4,6 @@ import {
   AppBar,
   Toolbar,
   Typography,
-  Button,
   Box,
   Container,
   Avatar,
@@ -14,7 +13,6 @@ import {
   Divider,
 } from '@mui/material';
 import LogoutIcon from '@mui/icons-material/Logout';
-import PersonIcon from '@mui/icons-material/Person';
 import HotelIcon from '@mui/icons-material/Hotel';
 import { useAuth } from '../contexts/AuthContext';
 import { UserRole } from '../types';

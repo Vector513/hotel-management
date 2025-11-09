@@ -26,7 +26,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import PeopleIcon from '@mui/icons-material/People';
 import CleaningServicesIcon from '@mui/icons-material/CleaningServices';
-import { roomsAPI, clientsAPI, authAPI } from '../../services/api';
+import { roomsAPI, authAPI } from '../../services/api';
 import type { Room, CreateRoomRequest, UpdateRoomRequest, Client } from '../../types';
 import { RoomType, DayOfWeek } from '../../types';
 

@@ -295,11 +295,22 @@ object SeedDatabase {
 // Функция для запуска скрипта
 fun main() {
     // Подключаемся к базе данных
+    // Используем переменные окружения для Docker или значения по умолчанию для локального запуска
+    val dbUrl = System.getenv("DB_URL") ?: "jdbc:postgresql://postgres:5432/hotel_db"
+    val dbUser = System.getenv("DB_USER") ?: "hotel_admin"
+    val dbPassword = System.getenv("DB_PASSWORD") ?: "orf.12014319N"
+    val dbDriver = System.getenv("DB_DRIVER") ?: "org.postgresql.Driver"
+    
+    // Отладочный вывод
+    println("DB_URL from env: ${System.getenv("DB_URL")}")
+    println("Using DB_URL: $dbUrl")
+    println("Using DB_USER: $dbUser")
+    
     Database.connect(
-        url = "jdbc:postgresql://localhost:5432/hotel_db",
-        driver = "org.postgresql.Driver",
-        user = "hotel_admin",
-        password = "orf.12014319N"
+        url = dbUrl,
+        driver = dbDriver,
+        user = dbUser,
+        password = dbPassword
     )
     
     try {
