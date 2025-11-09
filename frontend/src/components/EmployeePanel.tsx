@@ -94,52 +94,122 @@ const EmployeePanel: React.FC = () => {
   }
 
   return (
-    <Container maxWidth="md">
-      <Box display="flex" justifyContent="space-between" alignItems="center" sx={{ mt: 3, mb: 2 }}>
-        <Typography variant="h4" component="h1">
+    <Box>
+      <Box sx={{ mb: 4 }}>
+        <Typography
+          variant="h4"
+          component="h1"
+          sx={{
+            fontWeight: 700,
+            mb: 0.5,
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            backgroundClip: 'text',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+          }}
+        >
           Мое расписание уборки
         </Typography>
+        <Typography variant="body2" color="text.secondary">
+          Расписание работы и управление уборкой
+        </Typography>
+      </Box>
+
+      <Box
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
+        flexWrap="wrap"
+        gap={2}
+        sx={{ mb: 3 }}
+      >
+        <Box>
+          <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>
+            Записей в расписании: {schedules.length}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Этажи: {[...new Set(schedules.map(s => s.floor))].join(', ') || 'Нет'}
+          </Typography>
+        </Box>
         <Button
           variant="outlined"
           startIcon={<CleaningServicesIcon />}
           onClick={() => setOpenCleanerDialog(true)}
+          sx={{
+            borderColor: 'primary.main',
+            '&:hover': {
+              borderColor: 'primary.dark',
+              bgcolor: 'primary.light',
+              color: 'white',
+            },
+          }}
         >
           Узнать уборщика клиента
         </Button>
       </Box>
 
       {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
+        <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>
           {error}
         </Alert>
       )}
 
-      <TableContainer component={Paper}>
+      <TableContainer
+        component={Paper}
+        elevation={0}
+        sx={{
+          border: '1px solid',
+          borderColor: 'divider',
+          borderRadius: 2,
+          overflow: 'hidden',
+        }}
+      >
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell>День недели</TableCell>
-              <TableCell align="right">Этаж</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>День недели</TableCell>
+              <TableCell align="right" sx={{ fontWeight: 600 }}>Этаж</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {schedules.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={2} align="center">
-                  Нет записей в расписании
+                <TableCell colSpan={2} align="center" sx={{ py: 6 }}>
+                  <Box sx={{ textAlign: 'center' }}>
+                    <CleaningServicesIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 2, opacity: 0.5 }} />
+                    <Typography variant="body1" color="text.secondary" sx={{ fontWeight: 500 }}>
+                      Нет записей в расписании
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                      Обратитесь к администратору для добавления расписания
+                    </Typography>
+                  </Box>
                 </TableCell>
               </TableRow>
             ) : (
               schedules.map((schedule) => (
-                <TableRow key={schedule.scheduleId}>
+                <TableRow
+                  key={schedule.scheduleId}
+                  sx={{
+                    '&:hover': {
+                      bgcolor: 'action.hover',
+                    },
+                    '&:last-child td': {
+                      borderBottom: 0,
+                    },
+                  }}
+                >
                   <TableCell>
                     <Chip
                       label={dayOfWeekLabels[schedule.dayOfWeek] || schedule.dayOfWeek}
                       color="primary"
                       variant="outlined"
+                      sx={{ fontWeight: 500 }}
                     />
                   </TableCell>
-                  <TableCell align="right">{schedule.floor}</TableCell>
+                  <TableCell align="right" sx={{ fontWeight: 600, fontSize: '1.1rem' }}>
+                    {schedule.floor} этаж
+                  </TableCell>
                 </TableRow>
               ))
             )}
@@ -212,7 +282,7 @@ const EmployeePanel: React.FC = () => {
           </Button>
         </DialogActions>
       </Dialog>
-    </Container>
+    </Box>
   );
 };
 

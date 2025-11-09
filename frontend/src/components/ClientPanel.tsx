@@ -112,17 +112,56 @@ const ClientPanel: React.FC = () => {
   }
 
   return (
-    <Container maxWidth="md">
-      <Box display="flex" justifyContent="space-between" alignItems="center" sx={{ mt: 3, mb: 2 }}>
-        <Typography variant="h4" component="h1">
+    <Box>
+      <Box sx={{ mb: 4 }}>
+        <Typography
+          variant="h4"
+          component="h1"
+          sx={{
+            fontWeight: 700,
+            mb: 0.5,
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            backgroundClip: 'text',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+          }}
+        >
           Мои счета
         </Typography>
-        <Box display="flex" gap={1}>
+        <Typography variant="body2" color="text.secondary">
+          Просмотр и управление вашими счетами
+        </Typography>
+      </Box>
+
+      <Box
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
+        flexWrap="wrap"
+        gap={2}
+        sx={{ mb: 3 }}
+      >
+        <Box>
+          <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>
+            Всего счетов: {invoices.length}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Общая сумма: {invoices.reduce((sum, inv) => sum + parseFloat(inv.totalAmount), 0).toLocaleString('ru-RU')} ₽
+          </Typography>
+        </Box>
+        <Box display="flex" gap={1.5} flexWrap="wrap">
           <Button
             variant="contained"
             startIcon={<ReceiptIcon />}
             onClick={handleRequestInvoice}
             disabled={requestingInvoice}
+            sx={{
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              '&:hover': {
+                background: 'linear-gradient(135deg, #5568d3 0%, #6a3d8f 100%)',
+                boxShadow: '0 10px 25px rgba(102, 126, 234, 0.4)',
+              },
+            }}
           >
             {requestingInvoice ? 'Запрос...' : 'Запросить счет'}
           </Button>
@@ -130,6 +169,14 @@ const ClientPanel: React.FC = () => {
             variant="outlined"
             startIcon={<CleaningServicesIcon />}
             onClick={() => setOpenCleanerDialog(true)}
+            sx={{
+              borderColor: 'primary.main',
+              '&:hover': {
+                borderColor: 'primary.dark',
+                bgcolor: 'primary.light',
+                color: 'white',
+              },
+            }}
           >
             Узнать уборщика
           </Button>
@@ -154,28 +201,61 @@ const ClientPanel: React.FC = () => {
         </Alert>
       )}
 
-      <TableContainer component={Paper}>
+      <TableContainer
+        component={Paper}
+        elevation={0}
+        sx={{
+          border: '1px solid',
+          borderColor: 'divider',
+          borderRadius: 2,
+          overflow: 'hidden',
+        }}
+      >
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell>ID счета</TableCell>
-              <TableCell>Дата выдачи</TableCell>
-              <TableCell align="right">Сумма</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>ID счета</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Дата выдачи</TableCell>
+              <TableCell align="right" sx={{ fontWeight: 600 }}>Сумма</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {invoices.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={3} align="center">
-                  Нет счетов
+                <TableCell colSpan={3} align="center" sx={{ py: 6 }}>
+                  <Box sx={{ textAlign: 'center' }}>
+                    <ReceiptIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 2, opacity: 0.5 }} />
+                    <Typography variant="body1" color="text.secondary" sx={{ fontWeight: 500 }}>
+                      Нет счетов
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                      Запросите счет, нажав на кнопку выше
+                    </Typography>
+                  </Box>
                 </TableCell>
               </TableRow>
             ) : (
               invoices.map((invoice) => (
-                <TableRow key={invoice.invoiceId}>
-                  <TableCell>{invoice.invoiceId}</TableCell>
-                  <TableCell>{new Date(invoice.issueDate).toLocaleDateString('ru-RU')}</TableCell>
-                  <TableCell align="right">{invoice.totalAmount} ₽</TableCell>
+                <TableRow
+                  key={invoice.invoiceId}
+                  sx={{
+                    '&:hover': {
+                      bgcolor: 'action.hover',
+                    },
+                    '&:last-child td': {
+                      borderBottom: 0,
+                    },
+                  }}
+                >
+                  <TableCell sx={{ fontWeight: 500 }}>#{invoice.invoiceId}</TableCell>
+                  <TableCell>{new Date(invoice.issueDate).toLocaleDateString('ru-RU', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                  })}</TableCell>
+                  <TableCell align="right" sx={{ fontWeight: 600, fontSize: '1.1rem', color: 'success.main' }}>
+                    {parseFloat(invoice.totalAmount).toLocaleString('ru-RU')} ₽
+                  </TableCell>
                 </TableRow>
               ))
             )}
@@ -237,7 +317,7 @@ const ClientPanel: React.FC = () => {
           </Button>
         </DialogActions>
       </Dialog>
-    </Container>
+    </Box>
   );
 };
 

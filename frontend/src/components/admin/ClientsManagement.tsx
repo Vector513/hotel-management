@@ -244,35 +244,75 @@ const ClientsManagement: React.FC = () => {
 
   return (
     <Box>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-        <Typography variant="h6">Управление клиентами</Typography>
+      <Box
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
+        mb={3}
+        flexWrap="wrap"
+        gap={2}
+      >
+        <Box>
+          <Typography variant="h5" sx={{ fontWeight: 600, mb: 0.5 }}>
+            Управление клиентами
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Всего клиентов: {clients.length}
+          </Typography>
+        </Box>
         <Button
           variant="contained"
           startIcon={<AddIcon />}
           onClick={() => handleOpenDialog()}
+          sx={{
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            '&:hover': {
+              background: 'linear-gradient(135deg, #5568d3 0%, #6a3d8f 100%)',
+              boxShadow: '0 10px 25px rgba(102, 126, 234, 0.4)',
+            },
+          }}
         >
           Добавить клиента
         </Button>
       </Box>
 
-      <Box display="flex" gap={2} mb={2}>
-        <TextField
-          label="Поиск по городу"
-          value={searchCity}
-          onChange={(e) => setSearchCity(e.target.value)}
-          size="small"
-        />
-        <Button
-          variant="outlined"
-          startIcon={<SearchIcon />}
-          onClick={handleSearchByCity}
-        >
-          Найти
-        </Button>
-        <Button variant="outlined" onClick={loadData}>
-          Показать всех
-        </Button>
-      </Box>
+      <Paper
+        elevation={0}
+        sx={{
+          p: 2,
+          mb: 3,
+          border: '1px solid',
+          borderColor: 'divider',
+          borderRadius: 2,
+        }}
+      >
+        <Box display="flex" gap={2} flexWrap="wrap" alignItems="center">
+          <TextField
+            label="Поиск по городу"
+            value={searchCity}
+            onChange={(e) => setSearchCity(e.target.value)}
+            size="small"
+            sx={{ flexGrow: 1, minWidth: 200 }}
+            InputProps={{
+              startAdornment: <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />,
+            }}
+          />
+          <Button
+            variant="outlined"
+            onClick={handleSearchByCity}
+            sx={{ minWidth: 120 }}
+          >
+            Найти
+          </Button>
+          <Button
+            variant="outlined"
+            onClick={loadData}
+            sx={{ minWidth: 140 }}
+          >
+            Показать всех
+          </Button>
+        </Box>
+      </Paper>
 
       {error && (
         <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')}>
@@ -280,54 +320,107 @@ const ClientsManagement: React.FC = () => {
         </Alert>
       )}
 
-      <TableContainer component={Paper}>
+      <TableContainer
+        component={Paper}
+        elevation={0}
+        sx={{
+          border: '1px solid',
+          borderColor: 'divider',
+          borderRadius: 2,
+          overflow: 'hidden',
+        }}
+      >
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell>ID</TableCell>
-              <TableCell>ФИО</TableCell>
-              <TableCell>Паспорт</TableCell>
-              <TableCell>Город</TableCell>
-              <TableCell>Дата заезда</TableCell>
-              <TableCell>Дней</TableCell>
-              <TableCell>Номер</TableCell>
-              <TableCell>Действия</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>ID</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>ФИО</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Паспорт</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Город</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Дата заезда</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Дней</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Номер</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Действия</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {clients.map((client) => (
-              <TableRow key={client.clientId}>
-                <TableCell>{client.clientId}</TableCell>
-                <TableCell>{client.fullName}</TableCell>
-                <TableCell>{client.passportNumber}</TableCell>
-                <TableCell>{client.city}</TableCell>
-                <TableCell>{new Date(client.checkInDate).toLocaleDateString('ru-RU')}</TableCell>
-                <TableCell>{client.daysReserved}</TableCell>
-                <TableCell>{client.roomId}</TableCell>
-                <TableCell>
-                  <IconButton
-                    size="small"
-                    onClick={() => handleOpenCleanerDialog(client)}
-                    title="Узнать уборщика"
-                  >
-                    <CleaningServicesIcon />
-                  </IconButton>
-                  <IconButton
-                    size="small"
-                    onClick={() => handleCreateInvoice(client.clientId)}
-                    title="Создать счет"
-                  >
-                    <ReceiptIcon />
-                  </IconButton>
-                  <IconButton size="small" onClick={() => handleOpenDialog(client)}>
-                    <EditIcon />
-                  </IconButton>
-                  <IconButton size="small" onClick={() => handleDelete(client.clientId)}>
-                    <DeleteIcon />
-                  </IconButton>
+            {clients.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={8} align="center" sx={{ py: 4 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    Нет клиентов
+                  </Typography>
                 </TableCell>
               </TableRow>
-            ))}
+            ) : (
+              clients.map((client) => (
+                <TableRow
+                  key={client.clientId}
+                  sx={{
+                    '&:hover': {
+                      bgcolor: 'action.hover',
+                    },
+                    '&:last-child td': {
+                      borderBottom: 0,
+                    },
+                  }}
+                >
+                  <TableCell>{client.clientId}</TableCell>
+                  <TableCell sx={{ fontWeight: 500 }}>{client.fullName}</TableCell>
+                  <TableCell>{client.passportNumber}</TableCell>
+                  <TableCell>{client.city}</TableCell>
+                  <TableCell>{new Date(client.checkInDate).toLocaleDateString('ru-RU')}</TableCell>
+                  <TableCell>{client.daysReserved}</TableCell>
+                  <TableCell>{client.roomId}</TableCell>
+                  <TableCell>
+                    <Box sx={{ display: 'flex', gap: 0.5 }}>
+                      <IconButton
+                        size="small"
+                        onClick={() => handleOpenCleanerDialog(client)}
+                        title="Узнать уборщика"
+                        sx={{
+                          color: 'info.main',
+                          '&:hover': { bgcolor: 'info.light', color: 'white' },
+                        }}
+                      >
+                        <CleaningServicesIcon fontSize="small" />
+                      </IconButton>
+                      <IconButton
+                        size="small"
+                        onClick={() => handleCreateInvoice(client.clientId)}
+                        title="Создать счет"
+                        sx={{
+                          color: 'success.main',
+                          '&:hover': { bgcolor: 'success.light', color: 'white' },
+                        }}
+                      >
+                        <ReceiptIcon fontSize="small" />
+                      </IconButton>
+                      <IconButton
+                        size="small"
+                        onClick={() => handleOpenDialog(client)}
+                        sx={{
+                          color: 'primary.main',
+                          '&:hover': { bgcolor: 'primary.light', color: 'white' },
+                        }}
+                      >
+                        <EditIcon fontSize="small" />
+                      </IconButton>
+                      <IconButton
+                        size="small"
+                        onClick={() => handleDelete(client.clientId)}
+                        sx={{
+                          color: 'error.main',
+                          '&:hover': { bgcolor: 'error.light', color: 'white' },
+                        }}
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </Box>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </TableContainer>

@@ -75,25 +75,86 @@ const Login: React.FC = () => {
   };
 
   return (
-    <Container maxWidth="sm">
-      <Box
-        sx={{
-          minHeight: '100vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <Paper elevation={3} sx={{ p: 4, width: '100%' }}>
-          <Typography variant="h4" component="h1" gutterBottom align="center">
-            Вход в систему
-          </Typography>
-          <Typography variant="body2" color="text.secondary" align="center" sx={{ mb: 3 }}>
-            Система управления отелем
-          </Typography>
+    <Box
+      sx={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        position: 'relative',
+        '&::before': {
+          content: '""',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.3) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.3) 0%, transparent 50%)',
+        },
+      }}
+    >
+      <Container maxWidth="sm" sx={{ position: 'relative', zIndex: 1 }}>
+        <Paper
+          elevation={24}
+          sx={{
+            p: { xs: 3, sm: 5 },
+            width: '100%',
+            borderRadius: 4,
+            background: 'rgba(255, 255, 255, 0.98)',
+            backdropFilter: 'blur(10px)',
+          }}
+        >
+          <Box sx={{ textAlign: 'center', mb: 4 }}>
+            <Box
+              sx={{
+                width: 64,
+                height: 64,
+                borderRadius: 2,
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                mx: 'auto',
+                mb: 2,
+                boxShadow: '0 10px 25px rgba(102, 126, 234, 0.3)',
+              }}
+            >
+              <Typography variant="h4" sx={{ color: 'white', fontWeight: 700 }}>
+                🏨
+              </Typography>
+            </Box>
+            <Typography
+              variant="h4"
+              component="h1"
+              gutterBottom
+              sx={{
+                fontWeight: 700,
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                backgroundClip: 'text',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                mb: 1,
+              }}
+            >
+              Добро пожаловать
+            </Typography>
+            <Typography variant="body1" color="text.secondary" sx={{ fontSize: '1rem' }}>
+              Система управления отелем
+            </Typography>
+          </Box>
 
           {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
+            <Alert
+              severity="error"
+              sx={{
+                mb: 3,
+                borderRadius: 2,
+                '& .MuiAlert-icon': {
+                  alignItems: 'center',
+                },
+              }}
+            >
               {error}
             </Alert>
           )}
@@ -108,6 +169,17 @@ const Login: React.FC = () => {
               margin="normal"
               required
               autoComplete="username"
+              sx={{
+                mb: 2,
+                '& .MuiOutlinedInput-root': {
+                  '&:hover fieldset': {
+                    borderColor: '#667eea',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#667eea',
+                  },
+                },
+              }}
             />
             <TextField
               fullWidth
@@ -119,22 +191,46 @@ const Login: React.FC = () => {
               margin="normal"
               required
               autoComplete="current-password"
+              sx={{
+                mb: 3,
+                '& .MuiOutlinedInput-root': {
+                  '&:hover fieldset': {
+                    borderColor: '#667eea',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#667eea',
+                  },
+                },
+              }}
             />
             <Button
               type="submit"
               fullWidth
               variant="contained"
-              color="primary"
               size="large"
-              sx={{ mt: 3, mb: 2 }}
               disabled={loading}
+              sx={{
+                mt: 2,
+                mb: 2,
+                py: 1.5,
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                fontSize: '1rem',
+                fontWeight: 600,
+                '&:hover': {
+                  background: 'linear-gradient(135deg, #5568d3 0%, #6a3d8f 100%)',
+                  boxShadow: '0 10px 25px rgba(102, 126, 234, 0.4)',
+                },
+                '&:disabled': {
+                  background: 'rgba(0, 0, 0, 0.12)',
+                },
+              }}
             >
-              {loading ? <CircularProgress size={24} /> : 'Войти'}
+              {loading ? <CircularProgress size={24} sx={{ color: 'white' }} /> : 'Войти'}
             </Button>
           </form>
         </Paper>
-      </Box>
-    </Container>
+      </Container>
+    </Box>
   );
 };
 

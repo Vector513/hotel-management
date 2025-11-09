@@ -913,7 +913,18 @@ fun Route.adminRoutes() {
                 if (!call.requireRole(UserRole.ADMIN, principal)) return@get
 
                 // Вычисляем период последнего квартала
-                val today = java.time.LocalDate.now()
+                // Для тестирования можно передать параметр testDate в формате YYYY-MM-DD
+                val testDateParam = call.request.queryParameters["testDate"]
+                val today = if (testDateParam != null) {
+                    try {
+                        java.time.LocalDate.parse(testDateParam)
+                    } catch (e: Exception) {
+                        application.log.warn("Invalid testDate format: $testDateParam, using current date")
+                        java.time.LocalDate.now()
+                    }
+                } else {
+                    java.time.LocalDate.now()
+                }
                 val currentMonth = today.monthValue
                 val currentYear = today.year
 

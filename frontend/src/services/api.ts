@@ -246,8 +246,11 @@ export const usersAPI = {
 
 // Admin API - Reports
 export const reportsAPI = {
-  getQuarterlyReport: async (): Promise<QuarterlyReport> => {
-    const response = await api.get<QuarterlyReport>('/admin/reports/quarterly');
+  getQuarterlyReport: async (testDate?: string): Promise<QuarterlyReport> => {
+    const url = testDate 
+      ? `/admin/reports/quarterly?testDate=${encodeURIComponent(testDate)}`
+      : '/admin/reports/quarterly';
+    const response = await api.get<QuarterlyReport>(url);
     return response.data;
   },
 };
