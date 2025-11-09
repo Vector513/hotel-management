@@ -2,6 +2,7 @@ package com.example.database.dao
 
 import com.example.database.tables.EmployeesTable
 import com.example.models.Employee
+import com.example.models.User
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -20,6 +21,11 @@ class EmployeeDao {
             .singleOrNull()
     }
 
+    fun findByUser(user: User): Employee? {
+        val employeeId = user.employeeId ?: return null
+        return findById(employeeId)
+    }
+
     fun findByFloor(floor: Int): List<Employee> = transaction {
         EmployeesTable
             .selectAll()
@@ -32,7 +38,7 @@ class EmployeeDao {
             it[fullName] = employee.fullName
             it[floor] = employee.floor
         } get EmployeesTable.employeeId
-    } ?: -1
+    }
 
     fun update(id: Int, updated: Employee): Boolean = transaction {
         EmployeesTable.update({ EmployeesTable.employeeId eq id }) {

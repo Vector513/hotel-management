@@ -85,6 +85,35 @@ class ClientDao {
         }
     }
 
+    // Получает список клиентов, у которых истек период проживания
+    fun getExpiredClients(): List<Client> = transaction {
+        val today = LocalDate.now()
+        ClientsTable
+            .selectAll()
+            .map { it.toClient() }
+            .filter { client ->
+                val checkoutDate = client.checkInDate.plusDays(client.daysReserved.toLong())
+                checkoutDate < today && client.isResident
+            }
+    }
+
+    // Обновляет статус клиентов, у которых истек период проживания
+    fun updateExpiredResidents(): Int = transaction {
+        val expiredClients = getExpiredClients()
+
+        if (expiredClients.isEmpty()) {
+            return@transaction 0
+        }
+
+        expiredClients.forEach { client ->
+            ClientsTable.update({ ClientsTable.clientId eq client.clientId }) {
+                it[ClientsTable.isResident] = false
+            }
+        }
+
+        expiredClients.size
+    }
+
 
     private fun ResultRow.toClient() = Client(
         clientId = this[ClientsTable.clientId],

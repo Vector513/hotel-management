@@ -25,9 +25,10 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import PeopleIcon from '@mui/icons-material/People';
-import { roomsAPI, clientsAPI } from '../../services/api';
+import CleaningServicesIcon from '@mui/icons-material/CleaningServices';
+import { roomsAPI, clientsAPI, authAPI } from '../../services/api';
 import type { Room, CreateRoomRequest, UpdateRoomRequest, Client } from '../../types';
-import { RoomType } from '../../types';
+import { RoomType, DayOfWeek } from '../../types';
 
 const roomTypeLabels: Record<RoomType, string> = {
   [RoomType.SINGLE]: 'Одноместный',
@@ -43,6 +44,12 @@ const RoomsManagement: React.FC = () => {
   const [error, setError] = useState('');
   const [openDialog, setOpenDialog] = useState(false);
   const [openResidentsDialog, setOpenResidentsDialog] = useState(false);
+  const [openCleanerDialog, setOpenCleanerDialog] = useState(false);
+  const [selectedRoomForCleaner, setSelectedRoomForCleaner] = useState<Room | null>(null);
+  const [selectedDayOfWeek, setSelectedDayOfWeek] = useState<DayOfWeek>(DayOfWeek.MONDAY);
+  const [cleanerName, setCleanerName] = useState<string>('');
+  const [loadingCleaner, setLoadingCleaner] = useState(false);
+  const [cleanerError, setCleanerError] = useState('');
   const [editingRoom, setEditingRoom] = useState<Room | null>(null);
   const [formData, setFormData] = useState<CreateRoomRequest>({
     roomNumber: 0,
@@ -134,6 +141,40 @@ const RoomsManagement: React.FC = () => {
     }
   };
 
+  const handleOpenCleanerDialog = (room: Room) => {
+    setSelectedRoomForCleaner(room);
+    setSelectedDayOfWeek(DayOfWeek.MONDAY);
+    setCleanerName('');
+    setCleanerError('');
+    setOpenCleanerDialog(true);
+  };
+
+  const handleCloseCleanerDialog = () => {
+    setOpenCleanerDialog(false);
+    setSelectedRoomForCleaner(null);
+    setCleanerName('');
+    setCleanerError('');
+  };
+
+  const handleGetCleaner = async () => {
+    if (!selectedRoomForCleaner) return;
+
+    try {
+      setLoadingCleaner(true);
+      setCleanerError('');
+      const response = await authAPI.getRoomCleaner(
+        selectedRoomForCleaner.roomId,
+        selectedDayOfWeek
+      );
+      setCleanerName(response.employeeName);
+    } catch (err: any) {
+      setCleanerError(err.response?.data || 'Ошибка получения информации об уборщике');
+      setCleanerName('');
+    } finally {
+      setLoadingCleaner(false);
+    }
+  };
+
   if (loading && rooms.length === 0) {
     return (
       <Box display="flex" justifyContent="center" p={3}>
@@ -191,6 +232,13 @@ const RoomsManagement: React.FC = () => {
                 <TableCell>{room.pricePerDay} ₽</TableCell>
                 <TableCell>{room.phoneNumber}</TableCell>
                 <TableCell>
+                  <IconButton
+                    size="small"
+                    onClick={() => handleOpenCleanerDialog(room)}
+                    title="Узнать уборщика"
+                  >
+                    <CleaningServicesIcon />
+                  </IconButton>
                   <IconButton
                     size="small"
                     onClick={() => handleViewResidents(room.roomId)}
@@ -306,6 +354,73 @@ const RoomsManagement: React.FC = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpenResidentsDialog(false)}>Закрыть</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Диалог для получения информации об уборщике */}
+      <Dialog open={openCleanerDialog} onClose={handleCloseCleanerDialog} maxWidth="sm" fullWidth>
+        <DialogTitle>Узнать уборщика номера</DialogTitle>
+        <DialogContent>
+          {selectedRoomForCleaner && (
+            <>
+              <Typography variant="body2" sx={{ mb: 2 }}>
+                Номер: <strong>№{selectedRoomForCleaner.roomNumber}</strong> (Этаж {selectedRoomForCleaner.floor})
+              </Typography>
+              <TextField
+                fullWidth
+                select
+                label="День недели"
+                value={selectedDayOfWeek}
+                onChange={(e) => setSelectedDayOfWeek(e.target.value as DayOfWeek)}
+                margin="normal"
+                required
+              >
+                {Object.values(DayOfWeek).map((day) => {
+                  const dayLabels: Record<DayOfWeek, string> = {
+                    [DayOfWeek.MONDAY]: 'Понедельник',
+                    [DayOfWeek.TUESDAY]: 'Вторник',
+                    [DayOfWeek.WEDNESDAY]: 'Среда',
+                    [DayOfWeek.THURSDAY]: 'Четверг',
+                    [DayOfWeek.FRIDAY]: 'Пятница',
+                    [DayOfWeek.SATURDAY]: 'Суббота',
+                    [DayOfWeek.SUNDAY]: 'Воскресенье',
+                  };
+                  return (
+                    <MenuItem key={day} value={day}>
+                      {dayLabels[day]}
+                    </MenuItem>
+                  );
+                })}
+              </TextField>
+              <Button
+                fullWidth
+                variant="contained"
+                onClick={handleGetCleaner}
+                disabled={loadingCleaner}
+                sx={{ mt: 2 }}
+              >
+                {loadingCleaner ? <CircularProgress size={24} /> : 'Узнать уборщика'}
+              </Button>
+              {cleanerError && (
+                <Alert severity="error" sx={{ mt: 2 }}>
+                  {cleanerError}
+                </Alert>
+              )}
+              {cleanerName && (
+                <Alert severity="success" sx={{ mt: 2 }}>
+                  <Typography variant="subtitle2" gutterBottom>
+                    Уборщик номера:
+                  </Typography>
+                  <Typography variant="h6">
+                    {cleanerName}
+                  </Typography>
+                </Alert>
+              )}
+            </>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseCleanerDialog}>Закрыть</Button>
         </DialogActions>
       </Dialog>
     </Box>

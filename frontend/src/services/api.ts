@@ -15,12 +15,14 @@ import type {
   Employee,
   CreateEmployeeRequest,
   UpdateEmployeeRequest,
+  EmployeeCreatedResponse,
   CleaningSchedule,
   CreateCleaningScheduleRequest,
   UpdateCleaningScheduleRequest,
   LoginRequest,
   LoginResponse,
-  User
+  User,
+  QuarterlyReport
 } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
@@ -78,6 +80,14 @@ api.interceptors.response.use(
 export const authAPI = {
   login: async (data: LoginRequest): Promise<LoginResponse> => {
     const response = await api.post<LoginResponse>('/login', data);
+    return response.data;
+  },
+  getClientCleaner: async (clientId: number, dayOfWeek: string): Promise<{ employeeName: string }> => {
+    const response = await api.get<{ employeeName: string }>(`/clients/${clientId}/cleaner?dayOfWeek=${encodeURIComponent(dayOfWeek)}`);
+    return response.data;
+  },
+  getRoomCleaner: async (roomId: number, dayOfWeek: string): Promise<{ employeeName: string }> => {
+    const response = await api.get<{ employeeName: string }>(`/rooms/${roomId}/cleaner?dayOfWeek=${encodeURIComponent(dayOfWeek)}`);
     return response.data;
   },
 };
@@ -152,8 +162,8 @@ export const invoicesAPI = {
     const response = await api.get<Invoice>(`/admin/invoices/${id}`);
     return response.data;
   },
-  create: async (data: CreateInvoiceRequest): Promise<{ invoiceId: number }> => {
-    const response = await api.post<{ invoiceId: number }>('/admin/invoices', data);
+  create: async (data: CreateInvoiceRequest): Promise<InvoiceResponse> => {
+    const response = await api.post<InvoiceResponse>('/admin/invoices', data);
     return response.data;
   },
   createForClient: async (clientId: number): Promise<InvoiceResponse> => {
@@ -178,8 +188,8 @@ export const employeesAPI = {
     const response = await api.get<Employee>(`/admin/employees/${id}`);
     return response.data;
   },
-  create: async (data: CreateEmployeeRequest): Promise<{ employeeId: number }> => {
-    const response = await api.post<{ employeeId: number }>('/admin/employees', data);
+  create: async (data: CreateEmployeeRequest): Promise<EmployeeCreatedResponse> => {
+    const response = await api.post<EmployeeCreatedResponse>('/admin/employees', data);
     return response.data;
   },
   update: async (id: number, data: UpdateEmployeeRequest): Promise<void> => {
@@ -234,10 +244,22 @@ export const usersAPI = {
   },
 };
 
+// Admin API - Reports
+export const reportsAPI = {
+  getQuarterlyReport: async (): Promise<QuarterlyReport> => {
+    const response = await api.get<QuarterlyReport>('/admin/reports/quarterly');
+    return response.data;
+  },
+};
+
 // Client API
 export const clientInvoicesAPI = {
   getMyInvoices: async (): Promise<Invoice[]> => {
     const response = await api.get<Invoice[]>('/client/invoices');
+    return response.data;
+  },
+  requestInvoice: async (): Promise<InvoiceResponse> => {
+    const response = await api.post<InvoiceResponse>('/client/requestInvoice');
     return response.data;
   },
 };

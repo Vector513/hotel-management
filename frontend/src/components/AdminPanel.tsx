@@ -12,6 +12,7 @@ import InvoicesManagement from './admin/InvoicesManagement';
 import EmployeesManagement from './admin/EmployeesManagement';
 import SchedulesManagement from './admin/SchedulesManagement';
 import UsersManagement from './admin/UsersManagement';
+import QuarterlyReport from './admin/QuarterlyReport';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -56,6 +57,7 @@ const AdminPanel: React.FC = () => {
           <Tab label="Сотрудники" />
           <Tab label="Расписание уборки" />
           <Tab label="Пользователи" />
+          <Tab label="Отчет за квартал" />
         </Tabs>
       </Box>
 
@@ -76,6 +78,9 @@ const AdminPanel: React.FC = () => {
       </TabPanel>
       <TabPanel value={value} index={5}>
         <UsersManagement />
+      </TabPanel>
+      <TabPanel value={value} index={6}>
+        <QuarterlyReport />
       </TabPanel>
     </Container>
   );

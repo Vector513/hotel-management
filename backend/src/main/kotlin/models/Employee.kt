@@ -13,6 +13,19 @@ data class Employee(
 data class CreateEmployeeRequest(
     val fullName: String,
     val floor: Int
+) {
+    fun toEmployee(employeeId: Int): Employee = Employee(
+        employeeId = employeeId,
+        fullName = fullName,
+        floor = floor
+    )
+}
+
+@Serializable
+data class EmployeeCreatedResponse(
+    val employeeId: Int,
+    val login: String,
+    val password: String
 )
 
 @Serializable

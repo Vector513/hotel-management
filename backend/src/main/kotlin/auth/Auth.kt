@@ -13,7 +13,7 @@ object JwtConfig {
 
     private val algorithm = Algorithm.HMAC256(secret)
 
-    fun generateToken(user: User, clientId: Int? = null, employeeId: Int? = null): String {
+    fun generateToken(user: User, clientId: Int? = null, employeeId: Int? = null, fullName: String? = null): String {
         val builder = JWT.create()
             .withAudience(audience)
             .withIssuer(issuer)
@@ -24,6 +24,7 @@ object JwtConfig {
 
         clientId?.let { builder.withClaim("clientId", it) }
         employeeId?.let { builder.withClaim("employeeId", it) }
+        fullName?.let { builder.withClaim("fullName", it) }
 
         return builder.sign(algorithm)
     }

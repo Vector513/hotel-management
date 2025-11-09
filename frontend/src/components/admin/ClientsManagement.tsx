@@ -25,8 +25,10 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import SearchIcon from '@mui/icons-material/Search';
 import ReceiptIcon from '@mui/icons-material/Receipt';
-import { clientsAPI, roomsAPI, invoicesAPI } from '../../services/api';
+import CleaningServicesIcon from '@mui/icons-material/CleaningServices';
+import { clientsAPI, roomsAPI, invoicesAPI, authAPI } from '../../services/api';
 import type { Client, CreateClientRequest, UpdateClientRequest, Room } from '../../types';
+import { DayOfWeek } from '../../types';
 
 const ClientsManagement: React.FC = () => {
   const [clients, setClients] = useState<Client[]>([]);
@@ -46,10 +48,45 @@ const ClientsManagement: React.FC = () => {
   const [searchCity, setSearchCity] = useState('');
   const [showCredentials, setShowCredentials] = useState(false);
   const [credentials, setCredentials] = useState<{ login: string; password: string } | null>(null);
+  const [openCleanerDialog, setOpenCleanerDialog] = useState(false);
+  const [selectedClientForCleaner, setSelectedClientForCleaner] = useState<Client | null>(null);
+  const [selectedDayOfWeek, setSelectedDayOfWeek] = useState<DayOfWeek>(DayOfWeek.MONDAY);
+  const [cleanerName, setCleanerName] = useState<string>('');
+  const [loadingCleaner, setLoadingCleaner] = useState(false);
+  const [cleanerError, setCleanerError] = useState('');
 
   useEffect(() => {
     loadData();
   }, []);
+
+  // Функция для получения максимальной вместимости номера
+  const getMaxCapacity = (roomType: string): number => {
+    switch (roomType) {
+      case 'SINGLE': return 1;
+      case 'DOUBLE': return 2;
+      case 'TRIPLE': return 3;
+      default: return 0;
+    }
+  };
+
+  // Функция для получения количества жильцов в номере
+  const getResidentsCount = (roomId: number): number => {
+    return clients.filter(c => c.roomId === roomId && c.isResident).length;
+  };
+
+  // Функция для проверки, доступен ли номер
+  const isRoomAvailable = (room: Room, editingClientId?: number): boolean => {
+    const residentsCount = clients.filter(
+      c => c.roomId === room.roomId && c.isResident && c.clientId !== editingClientId
+    ).length;
+    const maxCapacity = getMaxCapacity(room.type);
+    return residentsCount < maxCapacity;
+  };
+
+  // Получаем доступные номера для выбора
+  const getAvailableRooms = (editingClientId?: number): Room[] => {
+    return rooms.filter(room => isRoomAvailable(room, editingClientId));
+  };
 
   const loadData = async () => {
     try {
@@ -80,13 +117,14 @@ const ClientsManagement: React.FC = () => {
       });
     } else {
       setEditingClient(null);
+      const availableRooms = getAvailableRooms();
       setFormData({
         passportNumber: '',
         fullName: '',
         city: '',
         checkInDate: new Date().toISOString().split('T')[0],
         daysReserved: 1,
-        roomId: rooms[0]?.roomId || 0,
+        roomId: availableRooms[0]?.roomId || 0,
       });
     }
     setOpenDialog(true);
@@ -97,20 +135,30 @@ const ClientsManagement: React.FC = () => {
     setEditingClient(null);
     setCredentials(null);
     setShowCredentials(false);
+    // Сбрасываем форму
+    const availableRooms = getAvailableRooms();
+    setFormData({
+      passportNumber: '',
+      fullName: '',
+      city: '',
+      checkInDate: new Date().toISOString().split('T')[0],
+      daysReserved: 1,
+      roomId: availableRooms[0]?.roomId || 0,
+    });
   };
 
   const handleSubmit = async () => {
     try {
       if (editingClient) {
         await clientsAPI.update(editingClient.clientId, formData as UpdateClientRequest);
+        await loadData();
+        handleCloseDialog();
       } else {
         const response = await clientsAPI.create(formData);
         setCredentials({ login: response.login, password: response.password });
         setShowCredentials(true);
-      }
-      await loadData();
-      if (!showCredentials) {
-        handleCloseDialog();
+        await loadData();
+        // Не закрываем диалог, чтобы пользователь увидел логин и пароль
       }
     } catch (err: any) {
       setError(err.response?.data || 'Ошибка сохранения');
@@ -133,6 +181,40 @@ const ClientsManagement: React.FC = () => {
       alert(`Счет создан! ID: ${response.invoiceId}, Сумма: ${response.amount} ₽`);
     } catch (err: any) {
       setError(err.response?.data || 'Ошибка создания счета');
+    }
+  };
+
+  const handleOpenCleanerDialog = (client: Client) => {
+    setSelectedClientForCleaner(client);
+    setSelectedDayOfWeek(DayOfWeek.MONDAY);
+    setCleanerName('');
+    setCleanerError('');
+    setOpenCleanerDialog(true);
+  };
+
+  const handleCloseCleanerDialog = () => {
+    setOpenCleanerDialog(false);
+    setSelectedClientForCleaner(null);
+    setCleanerName('');
+    setCleanerError('');
+  };
+
+  const handleGetCleaner = async () => {
+    if (!selectedClientForCleaner) return;
+
+    try {
+      setLoadingCleaner(true);
+      setCleanerError('');
+      const response = await authAPI.getClientCleaner(
+        selectedClientForCleaner.clientId,
+        selectedDayOfWeek
+      );
+      setCleanerName(response.employeeName);
+    } catch (err: any) {
+      setCleanerError(err.response?.data || 'Ошибка получения информации об уборщике');
+      setCleanerName('');
+    } finally {
+      setLoadingCleaner(false);
     }
   };
 
@@ -225,6 +307,13 @@ const ClientsManagement: React.FC = () => {
                 <TableCell>
                   <IconButton
                     size="small"
+                    onClick={() => handleOpenCleanerDialog(client)}
+                    title="Узнать уборщика"
+                  >
+                    <CleaningServicesIcon />
+                  </IconButton>
+                  <IconButton
+                    size="small"
                     onClick={() => handleCreateInvoice(client.clientId)}
                     title="Создать счет"
                   >
@@ -248,7 +337,18 @@ const ClientsManagement: React.FC = () => {
         <DialogContent>
           {showCredentials && credentials && (
             <Alert severity="success" sx={{ mb: 2 }}>
-              Клиент создан! Логин: {credentials.login}, Пароль: {credentials.password}
+              <Typography variant="subtitle2" gutterBottom>
+                Клиент создан!
+              </Typography>
+              <Typography variant="body2">
+                <strong>Логин:</strong> {credentials.login}
+              </Typography>
+              <Typography variant="body2">
+                <strong>Пароль:</strong> {credentials.password}
+              </Typography>
+              <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                Сохраните эти данные! Пароль больше не будет показан.
+              </Typography>
             </Alert>
           )}
           <TextField
@@ -302,19 +402,122 @@ const ClientsManagement: React.FC = () => {
             onChange={(e) => setFormData({ ...formData, roomId: parseInt(e.target.value) })}
             margin="normal"
             required
+            helperText={
+              formData.roomId > 0
+                ? (() => {
+                    const room = rooms.find(r => r.roomId === formData.roomId);
+                    if (!room) return '';
+                    const residents = getResidentsCount(room.roomId);
+                    const maxCapacity = getMaxCapacity(room.type);
+                    const available = maxCapacity - residents;
+                    return `Занято: ${residents}/${maxCapacity}. ${available > 0 ? `Свободно: ${available}` : 'Номер заполнен'}`;
+                  })()
+                : ''
+            }
           >
-            {rooms.map((room) => (
-              <MenuItem key={room.roomId} value={room.roomId}>
-                №{room.roomNumber} (Этаж {room.floor}, {room.type})
+            {getAvailableRooms(editingClient?.clientId).map((room) => {
+              const residents = getResidentsCount(room.roomId);
+              const maxCapacity = getMaxCapacity(room.type);
+              const available = maxCapacity - residents;
+              return (
+                <MenuItem key={room.roomId} value={room.roomId}>
+                  №{room.roomNumber} (Этаж {room.floor}, {room.type}) - {available > 0 ? `Свободно: ${available}/${maxCapacity}` : 'Заполнен'}
+                </MenuItem>
+              );
+            })}
+            {/* Показываем текущий номер клиента, даже если он заполнен (при редактировании) */}
+            {editingClient && (() => {
+              const currentRoom = rooms.find(r => r.roomId === editingClient.roomId);
+              if (currentRoom && !isRoomAvailable(currentRoom, editingClient.clientId)) {
+                return (
+                  <MenuItem key={`current-${editingClient.roomId}`} value={editingClient.roomId}>
+                    №{currentRoom.roomNumber} (текущий номер)
+                  </MenuItem>
+                );
+              }
+              return null;
+            })()}
+            {getAvailableRooms(editingClient?.clientId).length === 0 && !editingClient && (
+              <MenuItem disabled>
+                Нет доступных номеров
               </MenuItem>
-            ))}
+            )}
           </TextField>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseDialog}>Отмена</Button>
-          <Button onClick={handleSubmit} variant="contained">
-            {editingClient ? 'Сохранить' : 'Создать'}
-          </Button>
+          <Button onClick={handleCloseDialog}>{showCredentials ? 'Закрыть' : 'Отмена'}</Button>
+          {!showCredentials && (
+            <Button onClick={handleSubmit} variant="contained">
+              {editingClient ? 'Сохранить' : 'Создать'}
+            </Button>
+          )}
+        </DialogActions>
+      </Dialog>
+
+      {/* Диалог для получения информации об уборщике */}
+      <Dialog open={openCleanerDialog} onClose={handleCloseCleanerDialog} maxWidth="sm" fullWidth>
+        <DialogTitle>Узнать уборщика номера</DialogTitle>
+        <DialogContent>
+          {selectedClientForCleaner && (
+            <>
+              <Typography variant="body2" sx={{ mb: 2 }}>
+                Клиент: <strong>{selectedClientForCleaner.fullName}</strong>
+              </Typography>
+              <TextField
+                fullWidth
+                select
+                label="День недели"
+                value={selectedDayOfWeek}
+                onChange={(e) => setSelectedDayOfWeek(e.target.value as DayOfWeek)}
+                margin="normal"
+                required
+              >
+                {Object.values(DayOfWeek).map((day) => {
+                  const dayLabels: Record<DayOfWeek, string> = {
+                    [DayOfWeek.MONDAY]: 'Понедельник',
+                    [DayOfWeek.TUESDAY]: 'Вторник',
+                    [DayOfWeek.WEDNESDAY]: 'Среда',
+                    [DayOfWeek.THURSDAY]: 'Четверг',
+                    [DayOfWeek.FRIDAY]: 'Пятница',
+                    [DayOfWeek.SATURDAY]: 'Суббота',
+                    [DayOfWeek.SUNDAY]: 'Воскресенье',
+                  };
+                  return (
+                    <MenuItem key={day} value={day}>
+                      {dayLabels[day]}
+                    </MenuItem>
+                  );
+                })}
+              </TextField>
+              <Button
+                fullWidth
+                variant="contained"
+                onClick={handleGetCleaner}
+                disabled={loadingCleaner}
+                sx={{ mt: 2 }}
+              >
+                {loadingCleaner ? <CircularProgress size={24} /> : 'Узнать уборщика'}
+              </Button>
+              {cleanerError && (
+                <Alert severity="error" sx={{ mt: 2 }}>
+                  {cleanerError}
+                </Alert>
+              )}
+              {cleanerName && (
+                <Alert severity="success" sx={{ mt: 2 }}>
+                  <Typography variant="subtitle2" gutterBottom>
+                    Уборщик номера:
+                  </Typography>
+                  <Typography variant="h6">
+                    {cleanerName}
+                  </Typography>
+                </Alert>
+              )}
+            </>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseCleanerDialog}>Закрыть</Button>
         </DialogActions>
       </Dialog>
     </Box>

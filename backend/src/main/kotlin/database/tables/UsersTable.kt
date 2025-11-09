@@ -7,7 +7,8 @@ object UsersTable : Table("users") {
     val username = varchar("username", 50).uniqueIndex()
     val passwordHash = varchar("password_hash", 255)
     val role = varchar("role", 20) // ADMIN / CLIENT / WORKER
-    val clientId = integer("client_id").nullable() // новая колонка для связи с клиентом
+    val clientId = integer("client_id").nullable() // связь с клиентом
+    val employeeId = integer("employee_id").nullable() // связь с сотрудником
 
     override val primaryKey = PrimaryKey(id)
 }

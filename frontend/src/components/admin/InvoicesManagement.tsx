@@ -36,7 +36,6 @@ const InvoicesManagement: React.FC = () => {
   const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null);
   const [formData, setFormData] = useState<CreateInvoiceRequest>({
     clientId: 0,
-    totalAmount: '0',
     issueDate: new Date().toISOString().split('T')[0],
   });
 
@@ -65,14 +64,12 @@ const InvoicesManagement: React.FC = () => {
       setEditingInvoice(invoice);
       setFormData({
         clientId: invoice.clientId,
-        totalAmount: invoice.totalAmount,
         issueDate: invoice.issueDate,
       });
     } else {
       setEditingInvoice(null);
       setFormData({
         clientId: clients[0]?.clientId || 0,
-        totalAmount: '0',
         issueDate: new Date().toISOString().split('T')[0],
       });
     }
@@ -168,7 +165,7 @@ const InvoicesManagement: React.FC = () => {
       </TableContainer>
 
       <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
-        <DialogTitle>{editingInvoice ? 'Редактировать счет' : 'Добавить счет'}</DialogTitle>
+        <DialogTitle>{editingInvoice ? 'Редактировать счет' : 'Создать счет'}</DialogTitle>
         <DialogContent>
           <TextField
             fullWidth
@@ -187,22 +184,13 @@ const InvoicesManagement: React.FC = () => {
           </TextField>
           <TextField
             fullWidth
-            label="Сумма"
-            type="number"
-            value={formData.totalAmount}
-            onChange={(e) => setFormData({ ...formData, totalAmount: e.target.value })}
-            margin="normal"
-            required
-          />
-          <TextField
-            fullWidth
-            label="Дата выдачи"
+            label="Дата выдачи (опционально)"
             type="date"
-            value={formData.issueDate}
-            onChange={(e) => setFormData({ ...formData, issueDate: e.target.value })}
+            value={formData.issueDate || ''}
+            onChange={(e) => setFormData({ ...formData, issueDate: e.target.value || undefined })}
             margin="normal"
             InputLabelProps={{ shrink: true }}
-            required
+            helperText="Если не указана, будет использована сегодняшняя дата. Сумма рассчитывается автоматически на основе цены номера и количества дней."
           />
         </DialogContent>
         <DialogActions>

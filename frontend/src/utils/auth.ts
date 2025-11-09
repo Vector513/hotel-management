@@ -8,6 +8,7 @@ interface JWTPayload {
   role: UserRole;
   clientId?: number;
   employeeId?: number;
+  fullName?: string;
   exp: number;
   iat: number;
 }
@@ -21,6 +22,7 @@ export const decodeToken = (token: string): User | null => {
       role: decoded.role,
       clientId: decoded.clientId,
       employeeId: decoded.employeeId,
+      fullName: decoded.fullName,
     };
   } catch (error) {
     console.error('Failed to decode token:', error);

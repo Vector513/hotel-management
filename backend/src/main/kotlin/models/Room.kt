@@ -6,6 +6,15 @@ import java.math.BigDecimal
 @Serializable
 enum class RoomType { SINGLE, DOUBLE, TRIPLE }
 
+// Функция для получения максимального количества мест в номере
+fun RoomType.getMaxCapacity(): Int {
+    return when (this) {
+        RoomType.SINGLE -> 1
+        RoomType.DOUBLE -> 2
+        RoomType.TRIPLE -> 3
+    }
+}
+
 @Serializable
 data class Room(
     val roomId: Int,

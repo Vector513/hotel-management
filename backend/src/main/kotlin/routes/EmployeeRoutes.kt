@@ -2,6 +2,7 @@ package com.example.routes
 
 import com.example.database.dao.CleaningScheduleDao
 import com.example.models.UserRole
+import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
@@ -29,16 +30,18 @@ fun Route.employeeRoutes() {
                     return@get
                 }
 
-                // Попробуем извлечь employeeId из токена, но если нет — используем userId
+                // Извлекаем employeeId из токена
                 val employeeId = principal.getClaim("employeeId", Int::class)
-                    ?: principal.getClaim("userId", Int::class)
 
                 if (employeeId == null) {
-                    call.respond(HttpStatusCode.BadRequest, "Missing employee ID in token")
+                    application.log.warn("Employee ID not found in token for user ${principal.getClaim("username", String::class)}")
+                    call.respond(HttpStatusCode.BadRequest, "Missing employee ID in token. Please log in again.")
                     return@get
                 }
 
+                application.log.info("Fetching schedule for employee ID: $employeeId")
                 val schedules = scheduleDao.findByEmployee(employeeId)
+                application.log.info("Found ${schedules.size} schedule entries for employee $employeeId")
                 call.respond(HttpStatusCode.OK, schedules)
             }
         }

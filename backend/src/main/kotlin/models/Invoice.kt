@@ -17,10 +17,8 @@ data class Invoice(
 @Serializable
 data class CreateInvoiceRequest(
     val clientId: Int,
-    @Serializable(with = BigDecimalSerializer::class)
-    val totalAmount: BigDecimal,
     @Serializable(with = LocalDateSerializer::class)
-    val issueDate: LocalDate
+    val issueDate: LocalDate? = null // Если не указана, используется сегодняшняя дата
 )
 
 @Serializable

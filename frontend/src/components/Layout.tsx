@@ -48,7 +48,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           {user && (
             <>
               <Typography variant="body2" sx={{ mr: 2 }}>
-                {user.username} ({getRoleLabel(user.role)})
+                {user.fullName || user.username} ({getRoleLabel(user.role)})
               </Typography>
               <Button
                 color="inherit"

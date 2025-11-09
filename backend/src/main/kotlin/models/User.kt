@@ -11,7 +11,8 @@ data class User(
     val username: String,
     val passwordHash: String,
     val role: UserRole,
-    val clientId: Int? = null
+    val clientId: Int? = null,
+    val employeeId: Int? = null // новая колонка для связи с сотрудником
 )
 
 @Serializable
@@ -27,10 +28,12 @@ data class UpdateUserRequest(
     val password: String,
     val role: UserRole
 ) {
-    fun toUser(id: Int): User = User(
+    fun toUser(id: Int, clientId: Int? = null, employeeId: Int? = null): User = User(
         id = id,
         username = username,
         passwordHash = password,
-        role = role
+        role = role,
+        clientId = clientId,
+        employeeId = employeeId
     )
 }

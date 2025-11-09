@@ -35,6 +35,8 @@ const EmployeesManagement: React.FC = () => {
     fullName: '',
     floor: 1,
   });
+  const [showCredentials, setShowCredentials] = useState(false);
+  const [credentials, setCredentials] = useState<{ login: string; password: string } | null>(null);
 
   useEffect(() => {
     loadData();
@@ -72,17 +74,28 @@ const EmployeesManagement: React.FC = () => {
   const handleCloseDialog = () => {
     setOpenDialog(false);
     setEditingEmployee(null);
+    setCredentials(null);
+    setShowCredentials(false);
+    // Сбрасываем форму
+    setFormData({
+      fullName: '',
+      floor: 1,
+    });
   };
 
   const handleSubmit = async () => {
     try {
       if (editingEmployee) {
         await employeesAPI.update(editingEmployee.employeeId, formData as UpdateEmployeeRequest);
+        await loadData();
+        handleCloseDialog();
       } else {
-        await employeesAPI.create(formData);
+        const response = await employeesAPI.create(formData);
+        setCredentials({ login: response.login, password: response.password });
+        setShowCredentials(true);
+        await loadData();
+        // Не закрываем диалог, чтобы пользователь увидел логин и пароль
       }
-      await loadData();
-      handleCloseDialog();
     } catch (err: any) {
       setError(err.response?.data || 'Ошибка сохранения');
     }
@@ -158,6 +171,22 @@ const EmployeesManagement: React.FC = () => {
       <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
         <DialogTitle>{editingEmployee ? 'Редактировать сотрудника' : 'Добавить сотрудника'}</DialogTitle>
         <DialogContent>
+          {showCredentials && credentials && (
+            <Alert severity="success" sx={{ mb: 2 }}>
+              <Typography variant="subtitle2" gutterBottom>
+                Сотрудник создан!
+              </Typography>
+              <Typography variant="body2">
+                <strong>Логин:</strong> {credentials.login}
+              </Typography>
+              <Typography variant="body2">
+                <strong>Пароль:</strong> {credentials.password}
+              </Typography>
+              <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                Сохраните эти данные! Пароль больше не будет показан.
+              </Typography>
+            </Alert>
+          )}
           <TextField
             fullWidth
             label="ФИО"
@@ -177,10 +206,12 @@ const EmployeesManagement: React.FC = () => {
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseDialog}>Отмена</Button>
-          <Button onClick={handleSubmit} variant="contained">
-            {editingEmployee ? 'Сохранить' : 'Создать'}
-          </Button>
+          <Button onClick={handleCloseDialog}>{showCredentials ? 'Закрыть' : 'Отмена'}</Button>
+          {!showCredentials && (
+            <Button onClick={handleSubmit} variant="contained">
+              {editingEmployee ? 'Сохранить' : 'Создать'}
+            </Button>
+          )}
         </DialogActions>
       </Dialog>
     </Box>

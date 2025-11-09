@@ -26,6 +26,7 @@ export interface User {
   role: UserRole;
   clientId?: number;
   employeeId?: number;
+  fullName?: string;
 }
 
 export interface Client {
@@ -104,8 +105,7 @@ export interface Invoice {
 
 export interface CreateInvoiceRequest {
   clientId: number;
-  totalAmount: string;
-  issueDate: string;
+  issueDate?: string; // Опционально, если не указана, используется сегодняшняя дата
 }
 
 export interface UpdateInvoiceRequest {
@@ -135,6 +135,12 @@ export interface UpdateEmployeeRequest {
   floor: number;
 }
 
+export interface EmployeeCreatedResponse {
+  employeeId: number;
+  login: string;
+  password: string;
+}
+
 export interface CleaningSchedule {
   scheduleId: number;
   employeeId: number;
@@ -161,5 +167,23 @@ export interface LoginRequest {
 
 export interface LoginResponse {
   token: string;
+}
+
+export interface RoomOccupancyInfo {
+  roomId: number;
+  roomNumber: number;
+  floor: number;
+  type: RoomType;
+  occupiedDays: number;
+  freeDays: number;
+  totalDays: number;
+}
+
+export interface QuarterlyReport {
+  periodStart: string;
+  periodEnd: string;
+  totalClients: number;
+  totalRevenue: string;
+  roomOccupancy: RoomOccupancyInfo[];
 }
 
