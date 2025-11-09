@@ -651,8 +651,12 @@ fun Route.adminRoutes() {
                 if (!call.requireRole(UserRole.ADMIN, principal)) return@delete
 
                 val userId = call.parameters["id"]?.toIntOrNull()
-                val user = if (userId != null) userDao.findById(userId) else null
+                if (userId == null) {
+                    call.respond(HttpStatusCode.BadRequest, "Invalid user ID")
+                    return@delete
+                }
 
+                val user = userDao.findById(userId)
                 if (user == null) {
                     call.respond(HttpStatusCode.NotFound, "User not found")
                     return@delete
@@ -663,9 +667,36 @@ fun Route.adminRoutes() {
                     return@delete
                 }
 
-                userDao.delete(userId!!)
-                call.respond(HttpStatusCode.OK, "User deleted")
+                try {
+                    when (user.role) {
+                        UserRole.CLIENT -> {
+                            user.clientId?.let { clientId ->
+                                // Удаляем все счета клиента
+                                invoiceDao.findByClient(clientId).forEach { invoiceDao.delete(it.invoiceId) }
+                                // Удаляем запись о клиенте
+                                clientDao.delete(clientId)
+                            }
+                        }
+                        UserRole.WORKER -> {
+                            val employeeId = userId // Предполагаем, что userId == employeeId
+                            // Удаляем все записи расписания сотрудника
+                            scheduleDao.findByEmployee(employeeId).forEach { scheduleDao.delete(it.scheduleId) }
+                            // Удаляем запись о сотруднике
+                            employeeDao.delete(employeeId)
+                        }
+                        else -> {}
+                    }
+
+                    // Удаляем пользователя
+                    userDao.delete(userId)
+                    call.respond(HttpStatusCode.OK, "User and all related data deleted successfully")
+                } catch (e: Exception) {
+                    call.respond(HttpStatusCode.InternalServerError, "Error deleting user: ${e.message}")
+                }
             }
+
+
+
         }
     }
 }

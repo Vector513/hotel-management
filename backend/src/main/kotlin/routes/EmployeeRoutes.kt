@@ -29,7 +29,10 @@ fun Route.employeeRoutes() {
                     return@get
                 }
 
+                // Попробуем извлечь employeeId из токена, но если нет — используем userId
                 val employeeId = principal.getClaim("employeeId", Int::class)
+                    ?: principal.getClaim("userId", Int::class)
+
                 if (employeeId == null) {
                     call.respond(HttpStatusCode.BadRequest, "Missing employee ID in token")
                     return@get

@@ -2,6 +2,7 @@ package com.example.database.dao
 
 import com.example.database.tables.ClientsTable
 import com.example.models.Client
+import com.example.models.User
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -19,6 +20,11 @@ class ClientDao {
             .where { ClientsTable.clientId eq id }
             .map { it.toClient() }
             .singleOrNull()
+    }
+
+    fun findByUser(user: User): Client? {
+        val clientId = user.clientId ?: return null
+        return findById(clientId)
     }
 
     fun findByPassport(passport: String): Client? = transaction {
