@@ -19,7 +19,7 @@ import java.math.BigDecimal
 fun Route.clientRoutes() {
     val invoiceDao = InvoiceDao()
     val clientDao = ClientDao()
-    val userDao = UserDao()
+    UserDao()
     val roomDao = RoomDao()
 
     authenticate("auth-jwt") {
@@ -67,10 +67,6 @@ fun Route.clientRoutes() {
 
                 // Проверяем наличие комнаты
                 val roomId = client.roomId
-                if (roomId == null) {
-                    call.respond(HttpStatusCode.BadRequest, "You are not assigned to a room")
-                    return@post
-                }
 
                 // Получаем комнату
                 val room = roomDao.findById(roomId)

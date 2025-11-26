@@ -21,7 +21,7 @@ fun Route.adminRoutes() {
     val userDao = UserDao()
 
     // Вспомогательная функция для обновления статуса клиентов и создания счетов
-    suspend fun ApplicationCall.updateExpiredClientsAndCreateInvoices() {
+    fun ApplicationCall.updateExpiredClientsAndCreateInvoices() {
         val expiredClients = clientDao.getExpiredClients()
         if (expiredClients.isNotEmpty()) {
             val updatedCount = clientDao.updateExpiredResidents()
@@ -37,7 +37,7 @@ fun Route.adminRoutes() {
                 }
                 
                 if (!hasRecentInvoice) {
-                    val room = roomDao.findById(client.roomId ?: return@forEach)
+                    val room = roomDao.findById(client.roomId)
                     if (room != null) {
                         val total = room.pricePerDay.multiply(BigDecimal(client.daysReserved))
                         val invoice = Invoice(
@@ -118,7 +118,7 @@ fun Route.adminRoutes() {
                 }
 
                 val client = clientDao.findById(clientId)
-                if (client == null || client.roomId == null) {
+                if (client == null) {
                     call.respond(HttpStatusCode.NotFound, "Client not found or not assigned to a room")
                     return@get
                 }
@@ -146,7 +146,7 @@ fun Route.adminRoutes() {
                 val principal = call.principal<JWTPrincipal>()
                 if (!call.requireRole(UserRole.ADMIN, principal)) return@post
 
-                val request = try { call.receive<CreateClientRequest>() } catch (e: Exception) {
+                val request = try { call.receive<CreateClientRequest>() } catch (_: Exception) {
                     call.respond(HttpStatusCode.BadRequest, "Invalid client data")
                     return@post
                 }
@@ -222,13 +222,13 @@ fun Route.adminRoutes() {
                     return@put
                 }
 
-                val updated = try { call.receive<UpdateClientRequest>().toClient(clientId) } catch (e: Exception) {
+                val updated = try { call.receive<UpdateClientRequest>().toClient(clientId) } catch (_: Exception) {
                     call.respond(HttpStatusCode.BadRequest, "Invalid client data")
                     return@put
                 }
 
                 // Проверяем лимит мест в номере, если комната изменилась или клиент становится жильцом
-                if (updated.roomId != existingClient.roomId || (!existingClient.isResident && updated.isResident == true)) {
+                if (updated.roomId != existingClient.roomId || (!existingClient.isResident && updated.isResident)) {
                     val room = roomDao.findById(updated.roomId)
                     if (room == null) {
                         call.respond(HttpStatusCode.BadRequest, "Room not found")
@@ -242,7 +242,7 @@ fun Route.adminRoutes() {
                     }
 
                     // Если клиент становится жильцом, добавляем его к счету
-                    val willBeResident = updated.isResident ?: true
+                    val willBeResident = updated.isResident
                     val futureResidents = currentResidents + if (willBeResident) 1 else 0
 
                     // Проверяем, не превышает ли лимит
@@ -323,7 +323,7 @@ fun Route.adminRoutes() {
                 clientDao.updateExpiredResidents()
 
                 val allRooms = roomDao.getAll()
-                val occupiedRoomIds = clientDao.getAll().filter { it.isResident }.mapNotNull { it.roomId }.toSet()
+                val occupiedRoomIds = clientDao.getAll().filter { it.isResident }.map { it.roomId }.toSet()
                 val freeRooms = allRooms.filter { it.roomId !in occupiedRoomIds }
 
                 call.respond(
@@ -340,7 +340,7 @@ fun Route.adminRoutes() {
                 val principal = call.principal<JWTPrincipal>()
                 if (!call.requireRole(UserRole.ADMIN, principal)) return@post
 
-                val request = try { call.receive<CreateRoomRequest>() } catch (e: Exception) {
+                val request = try { call.receive<CreateRoomRequest>() } catch (_: Exception) {
                     call.respond(HttpStatusCode.BadRequest, "Invalid room data")
                     return@post
                 }
@@ -367,7 +367,7 @@ fun Route.adminRoutes() {
                     return@put
                 }
 
-                val updated = try { call.receive<UpdateRoomRequest>().toRoom(roomId) } catch (e: Exception) {
+                val updated = try { call.receive<UpdateRoomRequest>().toRoom(roomId) } catch (_: Exception) {
                     call.respond(HttpStatusCode.BadRequest, "Invalid room data")
                     return@put
                 }
@@ -1002,7 +1002,7 @@ fun Route.adminRoutes() {
                     occupiedDays = minOf(occupiedDays, totalDaysInQuarter)
                     val freeDays = totalDaysInQuarter - occupiedDays
 
-                    com.example.models.RoomOccupancyInfo(
+                    RoomOccupancyInfo(
                         roomId = room.roomId,
                         roomNumber = room.roomNumber,
                         floor = room.floor,
@@ -1013,7 +1013,7 @@ fun Route.adminRoutes() {
                     )
                 }
 
-                val report = com.example.models.QuarterlyReport(
+                val report = QuarterlyReport(
                     periodStart = periodStart.toString(),
                     periodEnd = periodEnd.toString(),
                     totalClients = totalClients,

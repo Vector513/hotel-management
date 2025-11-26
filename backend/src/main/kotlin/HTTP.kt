@@ -21,7 +21,7 @@ fun Application.configureHTTP() {
     }
     
     routing {
-        swaggerUI(path = "openapi")
-        openAPI(path = "openapi")
+//        swaggerUI(path = "openapi")
+//        openAPI(path = "openapi")
     }
 }

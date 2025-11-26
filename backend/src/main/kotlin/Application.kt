@@ -10,7 +10,7 @@ fun Application.module() {
     configureSerialization()
     configureDatabases()
     configureSecurity()
-    configureHTTP() // CORS должен быть установлен до routing
+    configureHTTP()
     configureLogging()
-    configureRouting() // Routing должен быть последним
+    configureRouting()
 }
